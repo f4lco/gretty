@@ -24,6 +24,9 @@ buildscript {
       url "file:$privateRepoDir"
     }
     jcenter()
+    maven {
+      url 'https://repository.apache.org/content/repositories/snapshots'
+    }
   }
 
   dependencies {

@@ -16,6 +16,9 @@ buildscript {
     maven {
       url 'https://dl.bintray.com/content/noamt/gradle-plugins'
     }
+    maven {
+      url 'https://repository.apache.org/content/repositories/snapshots'
+    }
   }
 
   dependencies {

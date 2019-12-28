@@ -72,6 +72,9 @@ class BasePlugin implements Plugin<Project> {
         url "file:${project.privateRepoDir}"
       }
       jcenter()
+      maven {
+        url 'https://repository.apache.org/content/repositories/snapshots'
+      }
     }
   }
 

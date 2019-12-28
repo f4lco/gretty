@@ -43,6 +43,9 @@ subprojects {
       url "file:/${project.rootProject.ext.privateRepoDir}"
     }
     jcenter()
+    maven {
+      url 'https://repository.apache.org/content/repositories/snapshots'
+    }
   }
 
   afterEvaluate {

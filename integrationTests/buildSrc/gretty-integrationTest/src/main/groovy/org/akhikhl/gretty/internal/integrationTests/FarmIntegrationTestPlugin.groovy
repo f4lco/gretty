@@ -36,6 +36,17 @@ class FarmIntegrationTestPlugin extends BasePlugin {
         integrationTestContainers -= ['jetty9.3', 'jetty9.4']
       }
 
+      // FIXME Low test coverage
+      // Below establishes the naming convention that all projects with names containing 'jakarta'
+      // use a more recent version of the servlet API with the javax trademark removed.
+      // At this time only one itest project is jakarta enabled, which means all jakarta-enabled
+      // servlet containers are covered by exactly one test.
+      if (project.path.toLowerCase().contains('jakarta')) {
+        integrationTestContainers = integrationTestContainers.intersect(['tomcat10'])
+      } else {
+        integrationTestContainers -= ['tomcat10']
+      }
+
       integrationTestContainers.each { container ->
 
         project.farms.farm container, {

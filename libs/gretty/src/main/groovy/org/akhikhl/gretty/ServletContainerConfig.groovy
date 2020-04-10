@@ -13,6 +13,8 @@ import groovy.transform.TypeCheckingMode
 
 import org.gradle.api.JavaVersion
 import org.gradle.api.Project
+import org.gradle.api.artifacts.Dependency
+import org.gradle.api.plugins.JavaPlugin
 import org.gradle.util.VersionNumber
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -28,6 +30,19 @@ class ServletContainerConfig {
 
   private static configs = createConfigs()
 
+  // FIXME This entire redirect filter logic is wicked.
+  // Notice that "runnerConfig" parameter is not used. So this says:
+  //
+  // for every servlet container (jetty7, jetty8, ...):
+  //   ignore servlet container
+  //   add a dependency on gretty-filter in project's "runtimeOnly" scope
+  //
+  // I think it's completely inside out: instead of adding the gretty-filter
+  // dependency at compile-time (and therefore exporting a fixed version of
+  // gretty, the one the project was built with, in its dependency metadata),
+  // Gretty should figure out at runtime if any of the deployed projects
+  // require gretty-filter, and add gretty-filter to the classpath depending
+  // on the selected servlet container of this particular Gretty invocation.
   private static void addRedirectFilter(Project project, String runnerConfig) {
     ProjectUtils.withOverlays(project).find { proj ->
       boolean alteredDependencies = false
@@ -35,14 +50,40 @@ class ServletContainerConfig {
       if(webXmlFile.exists()) {
         def webXml = new XmlSlurper().parse(webXmlFile)
         if(webXml.filter.find { it.'filter-class'.text() == 'org.akhikhl.gretty.RedirectFilter' }) {
-          project.dependencies.add 'runtimeOnly', "org.gretty:gretty-filter:${project.ext.grettyVersion}", {
-            exclude group: 'javax.servlet', module: 'servlet-api'
+          if (hasJakarta(project)) {
+              project.dependencies.add 'runtimeOnly', "org.gretty:gretty-filter-jakarta:${project.ext.grettyVersion}", {
+                exclude group: 'jakarta.servlet', module: 'jakarta.servlet-api'
+              }
+          } else {
+            project.dependencies.add 'runtimeOnly', "org.gretty:gretty-filter:${project.ext.grettyVersion}", {
+              exclude group: 'javax.servlet', module: 'servlet-api'
+            }
           }
           alteredDependencies = true
         }
       }
       alteredDependencies
     }
+  }
+
+  // FIXME Below inspects only declared dependencies, and is not sensitive to transitive dependencies
+  // hasJakarta becomes obsolete after the comment in addRedirectFilter has been addressed
+  private static boolean hasJakarta(Project project) {
+    return project.configurations[JavaPlugin.RUNTIME_CLASSPATH_CONFIGURATION_NAME]
+            .allDependencies
+            .any(ServletContainerConfig.&isJakarta)
+  }
+
+  // FIXME Parsing of Jakarta's dependency version is unreliable
+  // isJakarta becomes obsolete after the comment in addRedirectFilter has been addressed
+  private static boolean isJakarta(Dependency dependency) {
+    if (dependency.group == "jakarta.servlet" && dependency.name == "jakarta.servlet-api") {
+      def matcher = dependency.version =~ /^(\d)\./
+      if (matcher.find()) {
+        return matcher.group(1).toInteger() >= 5
+      }
+    }
+    return false
   }
 
   private static createConfigs() {

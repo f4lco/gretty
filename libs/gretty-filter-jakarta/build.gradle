@@ -1,0 +1,12 @@
+apply from: rootProject.file('common.gradle')
+
+dependencies {
+  compileOnly 'jakarta.servlet:jakarta.servlet-api:5.0.0-M1'
+  compile 'org.codehaus.groovy.modules.http-builder:http-builder:0.7.1', {
+    exclude group: 'commons-logging', module: 'commons-logging'
+  }
+  compile "org.codehaus.groovy:groovy:${groovy_version}"
+  compile "org.codehaus.groovy:groovy-servlet:${groovy_version}"
+  compile "org.codehaus.groovy:groovy-jmx:${groovy_version}"
+  compile "org.slf4j:slf4j-api:$slf4j_version"
+}

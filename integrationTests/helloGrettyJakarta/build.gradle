@@ -1,0 +1,23 @@
+apply plugin: 'war'
+apply plugin: 'org.gretty'
+apply plugin: 'org.gretty.internal.integrationTests.IntegrationTestPlugin'
+
+dependencies {
+  compile 'org.webjars:bootstrap:3.2.0'
+  compile 'org.webjars:jquery:2.1.1'
+  // We use Velocity for example of template processing within the webapp.
+  compile 'org.apache.velocity:velocity:1.7'
+}
+
+gretty {
+  // Possible servletContainer values are 'jetty7', 'jetty8', 'jetty9', 'tomcat85', 'tomcat9', 'tomcat10'. Default is 'jetty9'.
+  servletContainer = 'tomcat10'
+  // httpsEnabled = true
+}
+
+war {
+  archiveName 'helloGretty.war'
+}
+
+defineIntegrationTest()
+testAll.dependsOn defineIntegrationTestAllContainers(), 'buildProduct'
